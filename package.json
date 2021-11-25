@@ -1,0 +1,13 @@
+{
+  "name": "api-hp-local",
+  "version": "1.0.0",
+  "description": "API em NodeJS para persistir dados localmente em minha máquina",
+  "main": "index.js",
+  "scripts": {},
+  "keywords": [],
+  "author": "Thiago Lima",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.17.1"
+  }
+}
