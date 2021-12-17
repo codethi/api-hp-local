@@ -1,17 +1,20 @@
 const express = require("express"); // Importação do módulo express
 const app = express(); // Utilização do Express
 const mongoose = require("mongoose");
+const Character = require("./models/Character");
 
 try {
-  mongoose.connect("mongodb+srv://root:admin@cluster0.xwlfi.mongodb.net/myFirstDatabase?retryWrites=true&w=majority", {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-  });
-  console.log('Banco de dados conectado!')
+  mongoose.connect(
+    "mongodb+srv://root:admin@cluster0.xwlfi.mongodb.net/myFirstDatabase?retryWrites=true&w=majority",
+    {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+    }
+  );
+  console.log("Banco de dados conectado!");
 } catch (err) {
-  console.log(`Erro ao conectar no banco de dados: ${err}`)
+  console.log(`Erro ao conectar no banco de dados: ${err}`);
 }
-
 
 app.use(express.json()); // Permite que a minha API recebe JSON
 const port = 3000;
@@ -22,24 +25,28 @@ app.get("/", (req, res) => {
 });
 
 // CRUD - READ(GET)
-app.get("/characters", (req, res) => {
+app.get("/characters", async (req, res) => {
+  const characters = await Character.find();
+
+  if (characters.length === 0) {
+    return res
+      .status(404)
+      .send({ message: "Não existem personagens cadastrados!" });
+  }
+
   res.send(characters.filter(Boolean));
 });
 
-// CRUD - CREATE(POST)
-app.post("/character", (req, res) => {
-  const character = req.body;
-
-  character.id = characters.length + 1;
-  characters.push(character);
-
-  res.send({ message: "Personagem inserido com sucesso!" });
-});
-
 // GET by ID - Detalhes
-app.get("/character/:id", (req, res) => {
-  const id = +req.params.id;
-  const character = characters.filter(Boolean).find((c) => c.id === id);
+app.get("/character/:id", async (req, res) => {
+  const { id } = req.params;
+
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    res.status(400).send({ error: "Id Inválido" });
+    return;
+  }
+
+  const character = await Character.findById(id);
 
   if (!character) {
     res.send({ message: "Personagem não encontrado!" });
@@ -49,41 +56,75 @@ app.get("/character/:id", (req, res) => {
   res.send(character);
 });
 
-// CRUD - UPDATE (PUT)
-app.put("/character/:id", (req, res) => {
-  const id = +req.params.id;
-  const character = characters.filter(Boolean).find((c) => c.id === id);
+// CRUD - CREATE(POST)
+app.post("/character", async (req, res) => {
+  const { name, species, house, actor } = req.body;
 
-  if (!character) {
-    res.send({ message: "Personagem não encontrado!" });
+  if (!name || !species || !house || !actor) {
+    res.status(400).send({
+      message: "Você não enviou todos os dados necessários para o cadastro",
+    });
     return;
   }
 
+  const newCharacter = await new Character({
+    name,
+    species,
+    house,
+    actor,
+  });
+
+  await newCharacter.save();
+  res.send({ message: `Personagem inserido com sucesso: ${newCharacter}` });
+});
+
+// CRUD - UPDATE (PUT)
+app.put("/character/:id", async (req, res) => {
+  const { id } = req.params;
+
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    res.status(400).send({ error: "Id Inválido" });
+    return;
+  }
+
+  const character = await Character.findById(id);
+
+  if (!character) {
+    return res.status(404).send({ message: "Personagem não encontrado." });
+  }
+
   const { name, species, house, actor } = req.body;
+
+  if (!name || !species || !house || !actor) {
+    res.status(400).send({
+      message: "Você não enviou todos os dados necessários para o cadastro",
+    });
+    return;
+  }
 
   character.name = name;
   character.species = species;
   character.house = house;
   character.actor = actor;
 
-  res.send(character);
+  await character.save();
+  res.send({ message: "Personagem alterado com sucesso!" });
 });
 
 // CRUD - DELETE (DELETE)
-app.delete("/character/:id", (req, res) => {
-  const id = +req.params.id;
-  const character = characters.filter(Boolean).find((c) => c.id === id);
+app.delete("/character/:id", async (req, res) => {
+  const { id } = req.params;
 
-  if (!character) {
-    res.send({ message: "Personagem não encontrado!" });
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    res.status(400).send({ error: "Id Inválido" });
     return;
   }
 
-  const index = characters.indexOf(character)
-  delete characters[index]
+  const character = await Character.findById(id);
 
-  res.send({ message: "Personagem apagado com sucesso!" });
+  await character.remove()
 
+  res.send({ message: "Personagem removido com sucesso!" });
 });
 
 // Faz o nosso app ser executado
