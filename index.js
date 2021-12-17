@@ -49,8 +49,7 @@ app.get("/character/:id", async (req, res) => {
   const character = await Character.findById(id);
 
   if (!character) {
-    res.send({ message: "Personagem não encontrado!" });
-    return;
+    return res.status(404).send({ message: "Personagem não encontrado." });
   }
 
   res.send(character);
@@ -122,7 +121,7 @@ app.delete("/character/:id", async (req, res) => {
 
   const character = await Character.findById(id);
 
-  await character.remove()
+  await character.remove();
 
   res.send({ message: "Personagem removido com sucesso!" });
 });
