@@ -1,25 +1,20 @@
 const express = require("express"); // Importação do módulo express
 const app = express(); // Utilização do Express
+const mongoose = require("mongoose");
+
+try {
+  mongoose.connect("mongodb+srv://root:admin@cluster0.xwlfi.mongodb.net/myFirstDatabase?retryWrites=true&w=majority", {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+  });
+  console.log('Banco de dados conectado!')
+} catch (err) {
+  console.log(`Erro ao conectar no banco de dados: ${err}`)
+}
+
 
 app.use(express.json()); // Permite que a minha API recebe JSON
 const port = 3000;
-
-const characters = [
-  {
-    id: 1,
-    name: "Harry Potter",
-    species: "human",
-    house: "Gryffindor",
-    actor: "Daniel Radcliffe",
-  },
-  {
-    id: 2,
-    name: "Hermione Granger",
-    species: "human",
-    house: "Gryffindor",
-    actor: "Emma Watson",
-  },
-];
 
 // Rotas
 app.get("/", (req, res) => {
