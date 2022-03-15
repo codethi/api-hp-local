@@ -2,10 +2,11 @@ const express = require("express"); // Importação do módulo express
 const app = express(); // Utilização do Express
 const mongoose = require("mongoose");
 const Character = require("./models/Character");
+const cors = require("cors");
 
 try {
   mongoose.connect(
-    "mongodb+srv://root:admin@cluster0.xwlfi.mongodb.net/myFirstDatabase?retryWrites=true&w=majority",
+    "mongodb+srv://root:admin@api-hp.doqyv.mongodb.net/myFirstDatabase?retryWrites=true&w=majority",
     {
       useNewUrlParser: true,
       useUnifiedTopology: true,
@@ -17,7 +18,8 @@ try {
 }
 
 app.use(express.json()); // Permite que a minha API recebe JSON
-const port = 3000;
+const port = 3001;
+app.use(cors());
 
 // Rotas
 app.get("/", (req, res) => {
@@ -25,7 +27,7 @@ app.get("/", (req, res) => {
 });
 
 // CRUD - READ(GET)
-app.get("/characters", async (req, res) => {
+app.get("/character/all", async (req, res) => {
   const characters = await Character.find();
 
   if (characters.length === 0) {
@@ -56,10 +58,10 @@ app.get("/character/:id", async (req, res) => {
 });
 
 // CRUD - CREATE(POST)
-app.post("/character", async (req, res) => {
-  const { name, species, house, actor } = req.body;
+app.post("/character/create", async (req, res) => {
+  const { name, house, actor, image } = req.body;
 
-  if (!name || !species || !house || !actor) {
+  if (!name || !image || !house || !actor) {
     res.status(400).send({
       message: "Você não enviou todos os dados necessários para o cadastro",
     });
@@ -68,13 +70,13 @@ app.post("/character", async (req, res) => {
 
   const newCharacter = await new Character({
     name,
-    species,
+    image,
     house,
     actor,
   });
 
   await newCharacter.save();
-  res.send({ message: `Personagem inserido com sucesso: ${newCharacter}` });
+  res.send(newCharacter);
 });
 
 // CRUD - UPDATE (PUT)
@@ -92,9 +94,9 @@ app.put("/character/:id", async (req, res) => {
     return res.status(404).send({ message: "Personagem não encontrado." });
   }
 
-  const { name, species, house, actor } = req.body;
+  const { name, image, house, actor } = req.body;
 
-  if (!name || !species || !house || !actor) {
+  if (!name || !image || !house || !actor) {
     res.status(400).send({
       message: "Você não enviou todos os dados necessários para o cadastro",
     });
@@ -102,7 +104,7 @@ app.put("/character/:id", async (req, res) => {
   }
 
   character.name = name;
-  character.species = species;
+  character.image = image;
   character.house = house;
   character.actor = actor;
 
